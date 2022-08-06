@@ -1,5 +1,5 @@
 export interface PhotoResponse {
-    bytes: byte[];
+    //bytes: byte[];
     contentType: string;
     base64string: string;
 }

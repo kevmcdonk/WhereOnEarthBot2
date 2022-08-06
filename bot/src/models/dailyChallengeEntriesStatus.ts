@@ -4,6 +4,7 @@
  */
 
 export interface DailyChallengeEntriesStatus {
+  objType: string;
   allResultsReceived: boolean;
   usersWithEntryCount: number;
   userCount: number;

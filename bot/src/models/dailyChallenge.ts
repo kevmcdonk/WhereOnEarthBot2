@@ -1,6 +1,6 @@
 import { DailyChallengeEntry } from "./dailyChallengeEntry";
 
- enum DailyChallengeStatus
+ export enum DailyChallengeStatus
  {
      NotSet,
      Choosing,
@@ -10,6 +10,7 @@ import { DailyChallengeEntry } from "./dailyChallengeEntry";
 
 export interface DailyChallenge {
   id: string;
+  objType: string;
   text: string;
   photoUrl: string;
   extractedLocation: string;

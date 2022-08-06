@@ -5,6 +5,7 @@
 
 export interface DailyChallengeResult {
   id: string;
+  objType: string;
   winnerGuess: string
   winnerName: string;
   publishedTime: Date;

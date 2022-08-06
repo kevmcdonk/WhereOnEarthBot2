@@ -16,16 +16,16 @@ export interface Photo {
 
 export interface Detail {
     name: string;
-    rating: number = -5;
-    price_level: number = -5;
+    rating: number;// = -5;
+    price_level: number;// = -5;
     address: string;
     phone: string;
     open: Opening;
 }
 
 export interface Opening {
-    now: boolean = false;
-    periods: Period[];
+    now: boolean;// = false;
+    //periods: Period[];
 }
 
 export interface DailyChallengeTeam {

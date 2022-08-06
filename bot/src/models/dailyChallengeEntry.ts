@@ -1,6 +1,7 @@
 
 export interface DailyChallengeEntry {
   id: string;
+  objType: string;
   userId: string;
   userName: string;
   imageResponse: string;

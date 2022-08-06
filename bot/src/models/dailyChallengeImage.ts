@@ -4,6 +4,7 @@
  */
 
 export interface DailyChallengeImage {
+  objType: string;
   url: string;
   imageText: string;
   imageRegion: string;

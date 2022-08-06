@@ -5,5 +5,6 @@
 
 export interface DailyChallengeUser {
   id: string;
+  objType: string;
   username: string;
 }

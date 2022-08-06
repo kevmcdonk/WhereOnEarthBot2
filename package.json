@@ -9,5 +9,8 @@
     "devDependencies": {
         "@microsoft/teamsfx-cli": "1.*"
     },
-    "license": "MIT"
+    "license": "MIT",
+    "dependencies": {
+        "botbuilder-azure": "^4.16.0"
+    }
 }
