@@ -7,16 +7,18 @@ config({ path: ENV_FILE });
 
 // Import required bot services.
 // See https://aka.ms/bot-services to learn more about the different parts of a bot.
-import { CloudAdapter, ConversationState, MemoryStorage, UserState, ConfigurationBotFrameworkAuthentication } from 'botbuilder';
+import { CloudAdapter, ConversationState, MemoryStorage, UserState, ConfigurationBotFrameworkAuthentication, ConfigurationBotFrameworkAuthenticationOptions } from 'botbuilder';
 
 // The bot and its main dialog.
-import { DialogBot } from './bots/dialogBot';
+import { DialogBot } from './bots/DialogBot';
 import { MainDialog } from './dialogs/mainDialog';
 import { ChallengeGuesserDialog } from './dialogs/ChallengeGuesserDialog';
 
 import * as restify from "restify";
 
-const botFrameworkAuthentication = new ConfigurationBotFrameworkAuthentication(process.env);
+const botFrameworkAuthentication = new ConfigurationBotFrameworkAuthentication(process.env as ConfigurationBotFrameworkAuthenticationOptions);
+
+
 
 // Create adapter.
 // See https://aka.ms/about-bot-adapter to learn more about how bots work.
