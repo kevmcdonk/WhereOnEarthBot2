@@ -11,6 +11,9 @@
     },
     "license": "MIT",
     "dependencies": {
+        "@types/bingmaps": "^0.0.1",
+        "@types/google.maps": "^3.49.2",
+        "bingmaps": "^2.0.3",
         "botbuilder-azure": "^4.16.0"
     }
 }

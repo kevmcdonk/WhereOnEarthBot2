@@ -8,6 +8,7 @@ import { DailyChallengeImage } from "../models/dailyChallengeImage";
 import { DailyChallengeTeam } from "../models/dailyChallengeTeam";
 import { info } from "console";
 import { BasicAuthProvider, createApiClient, TeamsFx } from "@microsoft/teamsfx";
+import { getDailyChallengeImage } from "./cosmosService";
 
 const key = process.env.COSMOS_KEY || "<cosmos key>";
 const endpoint = process.env.COSMOS_ENDPOINT || "<cosmos endpoint>";
@@ -57,6 +58,8 @@ export async function getBingImageUrl(locationCode:string)
             );
             const response = await bingAPIClient.get("?format=js&idx=0&n=1&mkt=" + locationCode);
 
+            let returnedImage: DailyChallengeImage;
+            //returnedImage.
 /*
 
             HttpClient client = new HttpClient();
