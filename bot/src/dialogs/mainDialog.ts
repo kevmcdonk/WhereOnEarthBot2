@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { TimexProperty } from '@microsoft/recognizers-text-data-types-timex-expression';
 
-import { Attachment, AttachmentLayoutTypes, CardFactory, HeroCard, InputHints, MessageFactory, StatePropertyAccessor, TurnContext } from 'botbuilder';
+import { Activity, Attachment, AttachmentLayoutTypes, CardFactory, HeroCard, InputHints, MessageFactory, StatePropertyAccessor, TurnContext } from 'botbuilder';
 
 import {
     ComponentDialog,
@@ -17,13 +17,12 @@ import {
 import { ChallengeGuesserDialog } from './ChallengeGuesserDialog';
 import { getDailyChallenge, getDailyChallengeTeamInfo, saveDailyChallengeTeamInfo, saveDailyChallengeImage, getLatestInfo } from '../services/cosmosService'
 import { GetRandomLocation } from '../services/googleMapService';
-import { getBingImageUrl  } from '../services/bingImageService';
+import { getBingImageUrl } from '../services/bingImageService';
+import { getResultCardAttachment } from '../helpers/attachmentsHelper';
 import { DailyChallenge } from '../models/dailyChallenge';
 import { DailyChallengeTeam } from '../models/dailyChallengeTeam';
 import { DailyChallengeInfo, ImageSource } from '../models/dailyChallengeInfo';
 import { DailyChallengeImage } from '../models/dailyChallengeImage';
-
-const moment = require('moment');
 
 const MAIN_WATERFALL_DIALOG = 'mainWaterfallDialog';
 
@@ -68,172 +67,81 @@ export class MainDialog extends ComponentDialog {
      */
     private async introStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
         //TODO: Check Cosmos connection correct
-        const dailyChallenge:DailyChallenge = await getDailyChallenge();
+        const dailyChallenge: DailyChallenge = await getDailyChallenge();
         const teamInfo: DailyChallengeTeam = await getDailyChallengeTeamInfo();
 
-        if (dailyChallenge.photoUrl == null)
-                {
-                    const activity = stepContext.context.activity;
-                    if (teamInfo.channelData == null)
-                    {
-                        teamInfo.channelData = activity.channelData;
-                    }
-                    const teamsChannelData = teamInfo.channelData;
-
-                    const channelId = teamsChannelData.channel.id;
-                    const tenantId = teamsChannelData.tenant.id;
-                    const myBotId = activity.recipient.id;
-                    const teamId = teamsChannelData.team.id;
-                    const teamName = teamsChannelData.team.name;
-                    
-                    const dailyChallengeTeam: DailyChallengeTeam = {
-                        serviceUrl: activity.serviceUrl,
-                        teamId: teamId,
-                        teamName: teamName,
-                        tenantId: tenantId,
-                        installerName: 'Automatic',
-                        botId: myBotId,
-                        channelId: channelId,
-                        channelData: teamsChannelData,
-                        objType: 'DailyChallengeTeam'
-                    }
-
-                    await saveDailyChallengeTeamInfo(dailyChallengeTeam);
-
-                    let attachment: Attachment = null;
-                    let reply = MessageFactory.attachment(attachment);
-
-                    let info: DailyChallengeInfo = await getLatestInfo(dailyChallenge);
-
-                    if (info.currentSource == ImageSource.Google)
-                    {
-                        attachment = await this.GetGoogleImageChoiceAttachment();
-                        //TelemetryClient.TrackTrace("Loaded Google image", Severity.Information, null);
-                    }
-                    else
-                    {
-                        // TelemetryClient.TrackTrace("Current source is Bing so get the latest image", Severity.Information, null);
-                        const imageIndex = info.currentImageIndex;
-                        attachment = await this.GetBingImageChoiceAttachment(imageIndex);
-                        //TelemetryClient.TrackTrace("Loaded Bing image", Severity.Information, null);
-                    }
-
-                    reply.attachments.push(attachment);
-                    //TelemetryClient.TrackTrace("Sending image reply", Severity.Information, null);
-                    //return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = (Activity)reply }, cancellationToken);
-                    return await stepContext.prompt('TextPrompt', { prompt: reply });
-                }
-                else
-                {
-                }
-        const weekLaterDate = moment().add(7, 'days').format('MMMM D, YYYY');
-        const messageText = (stepContext.options as any).restartMsg ? (stepContext.options as any).restartMsg : `What can I help you with today?\nSay something like "Book a flight from Paris to Berlin on ${weekLaterDate}"`;
-        const promptMessage = MessageFactory.text(messageText, messageText, InputHints.ExpectingInput);
-        return await stepContext.prompt('TextPrompt', { prompt: promptMessage });
-
-        /*
-            elemetryClient.TrackTrace("Main dialog started", Severity.Information, null);
-            if (string.IsNullOrEmpty(Configuration["DailyChallengeTableConnectionString"]))
-            {
-                TelemetryClient.TrackTrace("Connection String not defined", Severity.Error, null);
-                await stepContext.Context.SendActivityAsync(
-                    MessageFactory.Text("NOTE: Storage Connection String is not configured. To continue, add 'DailyChallengeTableConnectionString' to the appsettings.json file."), cancellationToken);
-
-                return await stepContext.EndDialogAsync(null, cancellationToken);
+        if (dailyChallenge.photoUrl == null) {
+            const activity = stepContext.context.activity;
+            if (teamInfo.channelData == null) {
+                teamInfo.channelData = activity.channelData;
             }
-            else
-            {
-                IMessageActivity reply = null;
+            const teamsChannelData = teamInfo.channelData;
 
-                TelemetryClient.TrackTrace("Get Daily Challenge and Team Info", Severity.Information, null);
-                DailyChallenge dailyChallenge = await tableService.GetDailyChallenge();
-                DailyChallengeTeam team = await tableService.getDailyChallengeTeamInfo();
-                TelemetryClient.TrackTrace("Check whether today's challenge exists", Severity.Information, null);
-                if (dailyChallenge.photoUrl == null)
-                {
-                    TelemetryClient.TrackTrace("No Daily Challenge so check details", Severity.Information, null);
-                    var activity = stepContext.Context.Activity;
-                    if (team.ChannelData == null)
-                    {
-                        team.ChannelData = activity.GetChannelData<TeamsChannelData>();
-                    }
-                    var teamsChannelData = team.ChannelData;
+            const channelId = teamsChannelData.channel.id;
+            const tenantId = teamsChannelData.tenant.id;
+            const myBotId = activity.recipient.id;
+            const teamId = teamsChannelData.team.id;
+            const teamName = teamsChannelData.team.name;
 
-                    var channelId = teamsChannelData.Channel.Id;
-                    var tenantId = teamsChannelData.Tenant.Id;
-                    string myBotId = activity.Recipient.Id;
-                    string teamId = teamsChannelData.Team.Id;
-                    string teamName = teamsChannelData.Team.Name;
-                    
-                    await this.tableService.SaveDailyChallengeTeamInfo(new DailyChallengeTeam()
-                    {
-                        ServiceUrl = activity.ServiceUrl,
-                        TeamId = teamId,
-                        TeamName = teamName,
-                        TenantId = tenantId,
-                        InstallerName = "Automatic",
-                        BotId = myBotId,
-                        ChannelId = channelId,
-                        ChannelData = teamsChannelData
-                    });
-
-                    reply = MessageFactory.Attachment(new List<Attachment>());
-                    Attachment attachment = null;
-
-                    DailyChallengeInfo info = await GetInfo(stepContext);
-
-                    if (info.currentSource == ImageSource.Google)
-                    {
-                        TelemetryClient.TrackTrace("Current source is Google so get an image", Severity.Information, null);
-                        attachment = await GetGoogleImageChoiceAttachment();
-                        TelemetryClient.TrackTrace("Loaded Google image", Severity.Information, null);
-                    }
-                    else
-                    {
-                        TelemetryClient.TrackTrace("Current source is Bing so get the latest image", Severity.Information, null);
-                        int imageIndex = info.currentImageIndex;
-                        attachment = await GetBingImageChoiceAttachment(imageIndex);
-                        TelemetryClient.TrackTrace("Loaded Bing image", Severity.Information, null);
-                    }
-
-                    reply.Attachments.Add(attachment);
-                    TelemetryClient.TrackTrace("Sending image reply", Severity.Information, null);
-                    return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = (Activity)reply }, cancellationToken);
-                }
-                else
-                {
-                    if (!dailyChallenge.resultSet)
-                    {
-                        // Pass on the check results message from the proactive controller if set
-                        PromptOptions options = null;
-                        if (stepContext != null && stepContext.Options != null)
-                        {
-                            options = (PromptOptions)stepContext.Options;
-                            
-                        }
-                        return await stepContext.ReplaceDialogAsync(nameof(ChallengeGuesserDialog), options, cancellationToken);
-                    }
-                    else
-                    {
-                        IMessageActivity winningReply = MessageFactory.Attachment(new List<Attachment>());
-
-                        winningReply.Attachments.Add(AttachmentHelper.ResultCardAttachment(dailyChallenge.winnerName, dailyChallenge.photoUrl, dailyChallenge.winnerGuess, dailyChallenge.distanceToEntry.ToString("#.##"), dailyChallenge.extractedLocation, dailyChallenge.text));
-                        await stepContext.Context.SendActivityAsync(winningReply);
-                        return await stepContext.EndDialogAsync(cancellationToken: cancellationToken);
-                    }
-                }
+            const dailyChallengeTeam: DailyChallengeTeam = {
+                serviceUrl: activity.serviceUrl,
+                teamId: teamId,
+                teamName: teamName,
+                tenantId: tenantId,
+                installerName: 'Automatic',
+                botId: myBotId,
+                channelId: channelId,
+                channelData: teamsChannelData,
+                objType: 'DailyChallengeTeam'
             }
-        */
+
+            await saveDailyChallengeTeamInfo(dailyChallengeTeam);
+
+            let attachment: Attachment = null;
+            let reply = MessageFactory.attachment(attachment);
+
+            let info: DailyChallengeInfo = await getLatestInfo(dailyChallenge);
+
+            if (info.currentSource == ImageSource.Google) {
+                attachment = await this.GetGoogleImageChoiceAttachment();
+                //TelemetryClient.TrackTrace("Loaded Google image", Severity.Information, null);
+            }
+            else {
+                // TelemetryClient.TrackTrace("Current source is Bing so get the latest image", Severity.Information, null);
+                const imageIndex = info.currentImageIndex;
+                attachment = await this.GetBingImageChoiceAttachment(imageIndex);
+                //TelemetryClient.TrackTrace("Loaded Bing image", Severity.Information, null);
+            }
+
+            reply.attachments.push(attachment);
+            //TelemetryClient.TrackTrace("Sending image reply", Severity.Information, null);
+            return await stepContext.prompt('TextPrompt', { prompt: reply });
+        }
+        else {
+            if (!dailyChallenge.resultSet) {
+                // Pass on the check results message from the proactive controller if set
+                let options = null;
+                if (stepContext != null && stepContext.options != null) {
+                    options = stepContext.options;
+
+                }
+                return await stepContext.replaceDialog('ChallengeGuesserDialog', options);
+            }
+            else {
+                let winningReply = getResultCardAttachment(dailyChallenge.winnerName, dailyChallenge.photoUrl, dailyChallenge.winnerGuess, dailyChallenge.distanceToEntry.toString(), dailyChallenge.extractedLocation, dailyChallenge.text);
+                await stepContext.context.sendActivity(winningReply);
+                return await stepContext.endDialog();
+            }
+        }
     }
 
     /**
-     * Second step in the waterall.  This will use LUIS to attempt to extract the origin, destination and travel dates.
-     * Then, it hands off to the bookingDialog child dialog to collect any remaining details.
+     * Second step in the waterfall.
      */
     private async actStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
         const didntUnderstandMessageText = `Sorry, I didn't get that. Please try asking in a different way.`;
         await stepContext.context.sendActivity(didntUnderstandMessageText, didntUnderstandMessageText, InputHints.IgnoringInput);
-        
+
         return await stepContext.next();
     }
 
@@ -256,66 +164,60 @@ export class MainDialog extends ComponentDialog {
     }
 
     private async GetGoogleImageChoiceAttachment(): Promise<Attachment> {
-            let heroCard: Attachment = null;
+        let heroCard: Attachment = null;
 
-            try
-            {
-                let image: DailyChallengeImage = await GetRandomLocation();
-                await saveDailyChallengeImage(image);
-  
+        try {
+            let image: DailyChallengeImage = await GetRandomLocation();
+            await saveDailyChallengeImage(image);
+
+            heroCard = CardFactory.heroCard(
+                "Today's Daily Challenge",
+                "Click to choose the image for today or try another image.",
+                //subtitle: image.imageRegion,
+                [], // = new List<CardImage> { new CardImage(image.Url) },
+                [] /* = new List<CardAction> {
+                            new CardAction(ActionTypes.ImBack, "Choose image", value: "Choose image"),
+                            new CardAction(ActionTypes.ImBack, "Try another Google image", value: "Try another image"),
+                            new CardAction(ActionTypes.ImBack, "Switch to Bing", value: "Switch to Bing")
+                        }*/
+            );
+        }
+        catch (exp) {
+            if (exp.Message == "Sorry, couldn't find a suitable image. Try again shortly.") {
                 heroCard = CardFactory.heroCard(
                     "Today's Daily Challenge",
-                    "Click to choose the image for today or try another image.",
-                    //subtitle: image.imageRegion,
-                    [], // = new List<CardImage> { new CardImage(image.Url) },
-                    [] /* = new List<CardAction> {
-                            new CardAction(ActionTypes.ImBack, "Choose image", value: "Choose image"),
+                    "After trying 50 different locations, Google couldn't find a suitable image.",
+                    [],
+                    [], /* = new List<CardAction> {
                             new CardAction(ActionTypes.ImBack, "Try another Google image", value: "Try another image"),
                             new CardAction(ActionTypes.ImBack, "Switch to Bing", value: "Switch to Bing")
                         }*/
                 );
             }
-            catch (exp)
-            {
-                if (exp.Message == "Sorry, couldn't find a suitable image. Try again shortly.")
-                {
-                    heroCard = CardFactory.heroCard(
-                        "Today's Daily Challenge",
-                        "After trying 50 different locations, Google couldn't find a suitable image.",
-                        [],
-                        [], /* = new List<CardAction> {
+            else if (exp.Message == "Over Google query limit") {
+                const heroCard: Attachment = CardFactory.heroCard(
+                    "Today's Daily Challenge",
+                    "The Google Maps Search Service is on a low level and has exceeeded it's usage. Please wait a few minutes and try again or switch to Bing.",
+                    [],
+                    [],/* = new List<CardAction> {
                             new CardAction(ActionTypes.ImBack, "Try another Google image", value: "Try another image"),
                             new CardAction(ActionTypes.ImBack, "Switch to Bing", value: "Switch to Bing")
                         }*/
-                    );
-                }
-                else if (exp.Message == "Over Google query limit")
-                {
-                    const heroCard: Attachment = CardFactory.heroCard(
-                        "Today's Daily Challenge",
-                        "The Google Maps Search Service is on a low level and has exceeeded it's usage. Please wait a few minutes and try again or switch to Bing.",
-                        [],
-                        [],/* = new List<CardAction> {
-                            new CardAction(ActionTypes.ImBack, "Try another Google image", value: "Try another image"),
-                            new CardAction(ActionTypes.ImBack, "Switch to Bing", value: "Switch to Bing")
-                        }*/
-                    );
-                }
-                else
-                {
-                    throw exp;
-                }
+                );
             }
-
-            return heroCard;
+            else {
+                throw exp;
+            }
         }
-    
+
+        return heroCard;
+    }
+
 
     private async GetBingImageChoiceAttachment(imageIndex: number): Promise<Attachment> {
         let heroCard: Attachment = null;
 
-        try
-        {
+        try {
             let image: DailyChallengeImage = await getBingImageUrl(imageIndex.toString());
             await saveDailyChallengeImage(image);
 
@@ -332,10 +234,8 @@ export class MainDialog extends ComponentDialog {
                     }*/
             );
         }
-        catch (exp)
-        {
-            if (exp.Message == "Sorry, couldn't find a suitable image. Try again shortly.")
-            {
+        catch (exp) {
+            if (exp.Message == "Sorry, couldn't find a suitable image. Try again shortly.") {
                 heroCard = CardFactory.heroCard(
                     "Today's Daily Challenge",
                     "After trying 50 different locations, Google couldn't find a suitable image.",
@@ -346,8 +246,7 @@ export class MainDialog extends ComponentDialog {
                     }*/
                 );
             }
-            else
-            {
+            else {
                 throw exp;
             }
         }

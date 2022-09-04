@@ -22,6 +22,7 @@
         "@azure/identity": "^2.1.0",
         "@microsoft/teams-js": "^2.2.0",
         "@microsoft/teamsfx": "^1.0.0",
+        "assert": "^2.0.0",
         "botbuilder": "~4.16.0",
         "dotenv": "^16.0.1",
         "restify": "^8.5.1",
