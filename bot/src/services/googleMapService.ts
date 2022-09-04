@@ -12,12 +12,11 @@ import { getDailyChallengeImage } from "./cosmosService";
 
 const bingMapsKey = process.env.BING_MAPS_KEY || "<Bing Maps Key>";
 
-export async function GetRandomLocation(locationQueryText:string)
-{
+export async function GetRandomLocation(): Promise<DailyChallengeImage> {
     var map = new Microsoft.Maps.Map('#MyMap', {
-        credentials: 'Your Bing Maps Key'    
+        credentials: 'Your Bing Maps Key'
     });
-    
+
     Microsoft.Maps.loadModule('Microsoft.Maps.Search', () => {
         var searchManager = new Microsoft.Maps.Search.SearchManager(map);
         searchManager.geocode({
@@ -29,28 +28,29 @@ export async function GetRandomLocation(locationQueryText:string)
             }
         });
     });
+
+    return null;
 }
 
-    export async function SearchPlaces(latitude: string, longitude: string) {
-        try
-        {
-            // Load application configuration
-            const teamsFx = new TeamsFx();
-            // Initialize a new axios instance to call googleMapsAPI
-            const authProvider = new ApiKeyProvider(
-                "key",
-                teamsFx.getConfig("TEAMSFX_API_GOOGLEMAPSAPI_API_KEY"),
-                ApiKeyLocation.QueryParams
-            );
-            const googleMapsAPIClient = createApiClient(teamsFx.getConfig("TEAMSFX_API_GOOGLEMAPSAPI_ENDPOINT"), authProvider);
-            const response = await googleMapsAPIClient.get(`?place/nearbysearch/json?key=${teamsFx.getConfig("TEAMSFX_API_GOOGLEMAPSAPI_API_KEY")}&location=${latitude},${longitude}&radius=50000`);
+export async function SearchPlaces(latitude: string, longitude: string) {
+    try {
+        // Load application configuration
+        const teamsFx = new TeamsFx();
+        // Initialize a new axios instance to call googleMapsAPI
+        const authProvider = new ApiKeyProvider(
+            "key",
+            teamsFx.getConfig("TEAMSFX_API_GOOGLEMAPSAPI_API_KEY"),
+            ApiKeyLocation.QueryParams
+        );
+        const googleMapsAPIClient = createApiClient(teamsFx.getConfig("TEAMSFX_API_GOOGLEMAPSAPI_ENDPOINT"), authProvider);
+        const response = await googleMapsAPIClient.get(`?place/nearbysearch/json?key=${teamsFx.getConfig("TEAMSFX_API_GOOGLEMAPSAPI_API_KEY")}&location=${latitude},${longitude}&radius=50000`);
     }
     catch
     {
         return null;
     }
 }
-    }
+
 /*
 
             using Newtonsoft.Json;
@@ -170,4 +170,3 @@ namespace WhereOnEarthBot.Services
     }
 }
 */
-        }

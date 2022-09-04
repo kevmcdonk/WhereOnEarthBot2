@@ -6,6 +6,8 @@
   MessageBuilder,
 } from "@microsoft/teamsfx";
 */
+import { TeamsChannelData } from 'botbuilder';
+
 //TODO: sort out TeamsChannelData need
 export interface DailyChallengeTeam {
   serviceUrl: string;
@@ -16,6 +18,6 @@ export interface DailyChallengeTeam {
   installerName: string;
   botId: string;
   channelId: string;
-  //channelDate: TeamsChannelData;
-  channelDataSerialized: string;
+  channelData: TeamsChannelData;
+  //channelDataSerialized: string;
 }

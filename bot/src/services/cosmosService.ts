@@ -28,7 +28,7 @@ function getContainer() {
     return client.database(databaseId).container(containerId);
 }
 
-export async function getDailyChallenge() {
+export async function getDailyChallenge(): Promise<DailyChallenge> {
 
     const container = getContainer();
     const id: string = new Date().toDateString();
@@ -78,6 +78,8 @@ export async function getDailyChallenge() {
     if (dailyChallenge.publishedTime == null) {
         dailyChallenge.publishedTime = new Date();
     }
+
+    return dailyChallenge;
 }
 
 export async function saveDailyChallenge(dailyChallenge: DailyChallenge) {
@@ -94,7 +96,7 @@ export async function saveDailyChallenge(dailyChallenge: DailyChallenge) {
     await container.items.upsert(dailyChallenge);
 }
 
-export async function getLatestInfo(dailyChallenge: DailyChallenge) {
+export async function getLatestInfo(dailyChallenge: DailyChallenge): Promise<DailyChallengeInfo> {
     const container = getContainer();
 
     const id: string = new Date().toDateString();
@@ -120,7 +122,7 @@ export async function getLatestInfo(dailyChallenge: DailyChallenge) {
         container.items.upsert(dailyChallengeInfo);
     }
 
-    return info;
+    return dailyChallengeInfo;
 }
 
 export async function saveLatestInfo(info: DailyChallengeInfo) {
@@ -168,7 +170,7 @@ export async function saveDailyChallengeTeamInfo(team: DailyChallengeTeam) {
     container.items.upsert(team);
 }
 
-export async function getDailyChallengeTeamInfo() {
+export async function getDailyChallengeTeamInfo(): Promise<DailyChallengeTeam> {
     const container = getContainer();
 
     const id: string = new Date().toDateString();
@@ -180,19 +182,17 @@ export async function getDailyChallengeTeamInfo() {
     if (dailyChallengeTeams.resources.length = 0) {
         dailyChallengeTeam = {
             botId: "",
-            channelDataSerialized: "",
             channelId: "",
             installerName: "",
             serviceUrl: "",
             teamId: "",
             teamName: "",
             tenantId: "",
+            channelData: null,
             objType: "DailyChallengeTeam"
         }
         container.items.upsert(dailyChallengeTeam);
     }
 
-    return info;
-
-
+    return dailyChallengeTeam;
 }

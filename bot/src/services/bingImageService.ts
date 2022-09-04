@@ -43,7 +43,7 @@ export async function getBingImageUrlById(id:number) {
     return getBingImageUrl(getImageCodeById(id));
 }
 
-export async function getBingImageUrl(locationCode:string)
+export async function getBingImageUrl(locationCode:string): Promise<DailyChallengeImage>
         {
             const teamsfx = new TeamsFx();
             const teamsFx = new TeamsFx();
@@ -59,6 +59,8 @@ export async function getBingImageUrl(locationCode:string)
             const response = await bingAPIClient.get("?format=js&idx=0&n=1&mkt=" + locationCode);
 
             let returnedImage: DailyChallengeImage;
+
+            return returnedImage;
             //returnedImage.
 /*
 
