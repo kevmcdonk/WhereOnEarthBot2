@@ -7,14 +7,7 @@
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "devDependencies": {
-        "@microsoft/teamsfx-cli": "1.*",
-        "@types/mocha": "^9.1.1"
+        "@microsoft/teamsfx-cli": "1.*"
     },
-    "license": "MIT",
-    "dependencies": {
-        "@types/bingmaps": "^0.0.1",
-        "@types/google.maps": "^3.49.2",
-        "bingmaps": "^2.0.3",
-        "botbuilder-azure": "^4.16.0"
-    }
+    "license": "MIT"
 }
