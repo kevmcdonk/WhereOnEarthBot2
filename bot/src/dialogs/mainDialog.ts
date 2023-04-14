@@ -30,7 +30,7 @@ export class MainDialog extends ComponentDialog {
 
     constructor(challengeGuesserDialog: ChallengeGuesserDialog) {
         super('MainDialog');
-
+        console.log('Main Dialog constructor');
         // Define the main dialog and its related components.
         // This is a sample "book a flight" dialog.
         this.addDialog(new TextPrompt('TextPrompt'))

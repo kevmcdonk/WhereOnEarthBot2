@@ -7,7 +7,7 @@ config({ path: ENV_FILE });
 
 // Import required bot services.
 // See https://aka.ms/bot-services to learn more about the different parts of a bot.
-import { CloudAdapter, ConversationState, MemoryStorage, UserState, ConfigurationBotFrameworkAuthentication, ConfigurationBotFrameworkAuthenticationOptions } from 'botbuilder';
+import { CloudAdapter, ConversationState, MemoryStorage, UserState, ConfigurationBotFrameworkAuthentication, ConfigurationBotFrameworkAuthenticationOptions, BotCallbackHandlerKey } from 'botbuilder';
 
 // The bot and its main dialog.
 import { DialogBot } from './bots/DialogBot';
@@ -69,7 +69,8 @@ const bot = new DialogBot(conversationState, userState, dialog);
 // This template uses `restify` to serve HTTP responses.
 // Create a restify server.
 const server = restify.createServer();
-server.listen(process.env.port || process.env.PORT || 3978, () => {
+server.use(restify.plugins.bodyParser());
+server.listen(process.env.port || process.env.PORT || 3979, () => {
   console.log(`\nBot Started, ${server.name} listening to ${server.url}`);
 });
 
@@ -81,11 +82,15 @@ server.listen(process.env.port || process.env.PORT || 3978, () => {
 // in `/templates/provision/bot.bicep`.
 server.post('/api/messages', async (req, res) => {
   // Route received a request to adapter for processing
-
-  
-  await adapter.process(req, res, async (context) => {
+console.log('message received');
+//await adapter.process(req, res, (context) => bot.run(context));
+await adapter.process(req, res, (context) => {
+  console.log(req);
+  return bot.run(context);
+});
+  /*await adapter.process(req, res, async (context) => {
     console.log('getting ready to run');
       // route to bot activity handler.
       await bot.run(context);
-  });
+  });*/
 });
