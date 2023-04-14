@@ -50,6 +50,7 @@ export class MainDialog extends ComponentDialog {
      * @param {TurnContext} context
      */
     public async run(context: TurnContext, accessor: StatePropertyAccessor<DialogState>) {
+        console.log("Running Main Dialog");
         const dialogSet = new DialogSet(accessor);
         dialogSet.add(this);
 
@@ -66,6 +67,7 @@ export class MainDialog extends ComponentDialog {
      * Note that the sample LUIS model will only recognize Paris, Berlin, New York and London as airport cities.
      */
     private async introStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
+        console.log("introStep");
         //TODO: Check Cosmos connection correct
         const dailyChallenge: DailyChallenge = await getDailyChallenge();
         const teamInfo: DailyChallengeTeam = await getDailyChallengeTeamInfo();

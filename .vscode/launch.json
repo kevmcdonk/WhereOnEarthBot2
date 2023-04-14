@@ -74,9 +74,9 @@
             "stopAll": true
         },
         {
-            "name": "Debug (Chrome)",
+            "name": "Debug (Edge)",
             "configurations": [
-                "Launch Bot (Chrome)",
+                "Launch Bot (Edge)",
                 "Attach to Bot"
             ],
             "preLaunchTask": "Pre Debug Check & Start All",

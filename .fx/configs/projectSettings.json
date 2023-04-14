@@ -12,12 +12,12 @@
             "Bot"
         ],
         "activeResourcePlugins": [
-            "fx-resource-identity",
-            "fx-resource-bot",
             "fx-resource-local-debug",
             "fx-resource-appstudio",
             "fx-resource-cicd",
-            "fx-resource-api-connector"
+            "fx-resource-api-connector",
+            "fx-resource-bot",
+            "fx-resource-identity"
         ]
     },
     "programmingLanguage": "typescript",
@@ -28,5 +28,35 @@
                 "command-response"
             ]
         }
-    }
+    },
+    "components": [
+        {
+            "hosting": "azure-web-app",
+            "name": "teams-bot",
+            "build": true,
+            "provision": true,
+            "folder": "bot",
+            "capabilities": [
+                "command-response"
+            ],
+            "sso": false,
+            "deploy": true
+        },
+        {
+            "name": "azure-web-app",
+            "connections": [
+                "identity",
+                "teams-bot"
+            ],
+            "provision": true,
+            "scenario": "Bot"
+        },
+        {
+            "name": "bot-service",
+            "provision": true
+        },
+        {
+            "name": "identity"
+        }
+    ]
 }

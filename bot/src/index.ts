@@ -79,10 +79,13 @@ server.listen(process.env.port || process.env.PORT || 3978, () => {
 // The Teams Toolkit bot registration configures the bot with `/api/messages` as the
 // Bot Framework endpoint. If you customize this route, update the Bot registration
 // in `/templates/provision/bot.bicep`.
-server.post('/api/messages', (req, res) => {
+server.post('/api/messages', async (req, res) => {
   // Route received a request to adapter for processing
-  adapter.process(req, res, async (turnContext) => {
+
+  
+  await adapter.process(req, res, async (context) => {
+    console.log('getting ready to run');
       // route to bot activity handler.
-      await bot.run(turnContext);
+      await bot.run(context);
   });
 });
