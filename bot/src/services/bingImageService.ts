@@ -63,7 +63,9 @@ export async function getBingImageUrl(locationCode:string): Promise<DailyChallen
                 objType: "DailyChallengeImage",
                 url: 'https://bing.com' + response.data.images[0].url,
                 imageText: response.data.images[0].copyright,
-                imageRegion: response.data.images[0].location,
+
+                //TODO: region
+                imageRegion: "en-gb",//response.data.images[0].location,
                 longitude: response.data.images[0].longitude,
                 latitude: response.data.images[0].Latitude
             };

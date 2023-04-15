@@ -113,12 +113,16 @@ export class MainDialog extends ComponentDialog {
                 // TelemetryClient.TrackTrace("Current source is Bing so get the latest image", Severity.Information, null);
                 const imageIndex = info.currentImageIndex;
                 attachment = await this.GetBingImageChoiceAttachment(imageIndex);
+                return { status: DialogTurnStatus.waiting };
                 //TelemetryClient.TrackTrace("Loaded Bing image", Severity.Information, null);
             }
 
             reply.attachments.push(attachment);
+            await stepContext.context.sendActivity(reply);
             //TelemetryClient.TrackTrace("Sending image reply", Severity.Information, null);
+            //return await stepContext.prompt('TextPrompt', 'Yo');
             return await stepContext.prompt('TextPrompt', { prompt: reply });
+            // { "prompt": reply }
         }
         else {
             if (!dailyChallenge.resultSet) {
@@ -227,15 +231,26 @@ export class MainDialog extends ComponentDialog {
 
             heroCard = CardFactory.heroCard(
                 "Today's Daily Challenge",
-                image.imageRegion + " - Click to choose the image for today or try another image.",
-                [], // = new List<CardImage> { new CardImage(image.Url) },
-                [] /* new List<CardAction> {
-                    new CardAction(ActionTypes.ImBack, "Choose image", value: "Choose image"),
-                    new CardAction(ActionTypes.ImBack, "Try another image", value: "Try another image"),
-                    new CardAction(ActionTypes.ImBack, "Switch to Google", value: "Switch to Google")
-                }
-                    }*/
+                CardFactory.images[image.url],
+                CardFactory.actions([
+                    {
+                        title: "Choose image",
+                        type: "ImBack",
+                        value: "Choose image"
+                    },
+                    {
+                        title: "Try another image",
+                        type: "ImBack",
+                        value: "Try another image"
+                    },
+                    {
+                        title: "Switch to Google",
+                        type: "ImBack",
+                        value: "Switch to Google"
+                    }
+                ])
             );
+            heroCard = CardFactory.heroCard("Test","test");
         }
         catch (exp) {
             if (exp.Message == "Sorry, couldn't find a suitable image. Try again shortly.") {
