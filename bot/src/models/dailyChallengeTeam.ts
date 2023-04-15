@@ -10,6 +10,7 @@ import { TeamsChannelData } from 'botbuilder';
 
 //TODO: sort out TeamsChannelData need
 export interface DailyChallengeTeam {
+  id: string;
   serviceUrl: string;
   objType: string;
   teamId: string

@@ -58,7 +58,15 @@ export async function getBingImageUrl(locationCode:string): Promise<DailyChallen
             );
             const response = await bingAPIClient.get("?format=js&idx=0&n=1&mkt=" + locationCode);
 
-            let returnedImage: DailyChallengeImage;
+            let returnedImage: DailyChallengeImage = {
+                id: "DailyChallengeImage",
+                objType: "DailyChallengeImage",
+                url: 'https://bing.com' + response.data.images[0].url,
+                imageText: response.data.images[0].copyright,
+                imageRegion: response.data.images[0].location,
+                longitude: response.data.images[0].longitude,
+                latitude: response.data.images[0].Latitude
+            };
 
             return returnedImage;
             //returnedImage.

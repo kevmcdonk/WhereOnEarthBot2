@@ -40,7 +40,7 @@ export async function getDailyChallenge(): Promise<DailyChallenge> {
 
     let dailyChallenge: DailyChallenge;
 
-    if (dailyChallenges.resources.length = 0) {
+    if (dailyChallenges.resources.length == 0) {
         dailyChallenge = {
             id: id,
             text: "",
@@ -105,13 +105,14 @@ export async function getLatestInfo(dailyChallenge: DailyChallenge): Promise<Dai
     const dailyChallengeInfos = await container.items.query(query).fetchAll();
 
     let dailyChallengeInfo: DailyChallengeInfo;
-    if (dailyChallengeInfos.resources.length = 0) {
+    if (dailyChallengeInfos.resources.length == 0) {
         const basicUsers = [{
             id: "1",
             username: "Admin",
             objType: "DailyChallengeUser"
         }];
         dailyChallengeInfo = {
+            id: "DailyChallengeInfo",
             currentImageIndex: 0,
             currentSource: ImageSource.Bing,
             serializableImageSource: "",
@@ -120,6 +121,8 @@ export async function getLatestInfo(dailyChallenge: DailyChallenge): Promise<Dai
             objType: "DailyChallengeInfo"
         }
         container.items.upsert(dailyChallengeInfo);
+    } else {
+        dailyChallengeInfo = dailyChallengeInfos.resources[0];
     }
 
     return dailyChallengeInfo;
@@ -149,8 +152,9 @@ export async function getDailyChallengeImage() {
     const dailyChallengeImages = await container.items.query(query).fetchAll();
 
     let dailyChallengeImage: DailyChallengeImage;
-    if (dailyChallengeImages.resources.length = 0) {
+    if (dailyChallengeImages.resources.length == 0) {
         dailyChallengeImage = {
+            id: "DailyChallengeImage",
             imageRegion: "",
             imageText: "",
             latitude: 0,
@@ -179,8 +183,9 @@ export async function getDailyChallengeTeamInfo(): Promise<DailyChallengeTeam> {
     const dailyChallengeTeams = await container.items.query(query).fetchAll();
 
     let dailyChallengeTeam: DailyChallengeTeam;
-    if (dailyChallengeTeams.resources.length = 0) {
+    if (dailyChallengeTeams.resources.length == 0) {
         dailyChallengeTeam = {
+            id: "DailyChallengeTeam",
             botId: "",
             channelId: "",
             installerName: "",
@@ -191,7 +196,9 @@ export async function getDailyChallengeTeamInfo(): Promise<DailyChallengeTeam> {
             channelData: null,
             objType: "DailyChallengeTeam"
         }
-        container.items.upsert(dailyChallengeTeam);
+        container.items.upsert(dailyChallengeTeams.resources[0]);
+    }else {
+        dailyChallengeTeam = dailyChallengeTeams.resources[0];
     }
 
     return dailyChallengeTeam;

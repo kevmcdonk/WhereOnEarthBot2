@@ -7,6 +7,7 @@ export enum ImageSource
 }
 
 export interface DailyChallengeInfo {
+  id: string;
   objType: string;
   currentImageIndex: number;
   currentSource: ImageSource;

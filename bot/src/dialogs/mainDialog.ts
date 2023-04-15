@@ -72,20 +72,21 @@ export class MainDialog extends ComponentDialog {
         const dailyChallenge: DailyChallenge = await getDailyChallenge();
         const teamInfo: DailyChallengeTeam = await getDailyChallengeTeamInfo();
 
-        if (dailyChallenge.photoUrl == null) {
+        if (dailyChallenge.photoUrl == null || dailyChallenge.photoUrl == '') {
             const activity = stepContext.context.activity;
             if (teamInfo.channelData == null) {
                 teamInfo.channelData = activity.channelData;
             }
             const teamsChannelData = teamInfo.channelData;
 
-            const channelId = teamsChannelData.channel.id;
-            const tenantId = teamsChannelData.tenant.id;
-            const myBotId = activity.recipient.id;
-            const teamId = teamsChannelData.team.id;
-            const teamName = teamsChannelData.team.name;
+            const channelId = teamsChannelData.channel?.id;
+            const tenantId = teamsChannelData.tenant?.id;
+            const myBotId = activity.recipient?.id;
+            const teamId = teamsChannelData.team?.id;
+            const teamName = teamsChannelData.team?.name;
 
             const dailyChallengeTeam: DailyChallengeTeam = {
+                id: 'DailyChallengeTeam',
                 serviceUrl: activity.serviceUrl,
                 teamId: teamId,
                 teamName: teamName,
