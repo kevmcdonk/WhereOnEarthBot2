@@ -6,23 +6,27 @@ import { Activity, Attachment, AttachmentLayoutTypes, CardFactory, HeroCard, Inp
 
 import {
     ComponentDialog,
+    DateTimePrompt,
     DialogSet,
     DialogState,
     DialogTurnResult,
     DialogTurnStatus,
+    PromptOptions,
     TextPrompt,
     WaterfallDialog,
     WaterfallStepContext
 } from 'botbuilder-dialogs';
 import { ChallengeGuesserDialog } from './ChallengeGuesserDialog';
-import { getDailyChallenge, getDailyChallengeTeamInfo, saveDailyChallengeTeamInfo, saveDailyChallengeImage, getLatestInfo } from '../services/cosmosService'
+import { getDailyChallenge, getDailyChallengeTeamInfo, saveDailyChallengeTeamInfo, saveDailyChallengeImage, getLatestInfo, getDailyChallengeImage, saveDailyChallenge } from '../services/cosmosService'
 import { GetRandomLocation } from '../services/googleMapService';
 import { getBingImageUrl } from '../services/bingImageService';
 import { getResultCardAttachment } from '../helpers/attachmentsHelper';
-import { DailyChallenge } from '../models/dailyChallenge';
+import { DailyChallenge, DailyChallengeStatus } from '../models/dailyChallenge';
 import { DailyChallengeTeam } from '../models/dailyChallengeTeam';
+import { DailyChallengeEntry } from '../models/dailyChallengeEntry';
 import { DailyChallengeInfo, ImageSource } from '../models/dailyChallengeInfo';
 import { DailyChallengeImage } from '../models/dailyChallengeImage';
+import { GetLocationDetails } from '../services/bingMapService';
 
 const MAIN_WATERFALL_DIALOG = 'mainWaterfallDialog';
 
@@ -113,15 +117,16 @@ export class MainDialog extends ComponentDialog {
                 // TelemetryClient.TrackTrace("Current source is Bing so get the latest image", Severity.Information, null);
                 const imageIndex = info.currentImageIndex;
                 attachment = await this.GetBingImageChoiceAttachment(imageIndex);
-                return { status: DialogTurnStatus.waiting };
                 //TelemetryClient.TrackTrace("Loaded Bing image", Severity.Information, null);
             }
 
             reply.attachments.push(attachment);
-            await stepContext.context.sendActivity(reply);
-            //TelemetryClient.TrackTrace("Sending image reply", Severity.Information, null);
-            //return await stepContext.prompt('TextPrompt', 'Yo');
-            return await stepContext.prompt('TextPrompt', { prompt: reply });
+            
+            const promptOptions: PromptOptions = {
+                prompt: MessageFactory.attachment(attachment)                        
+            };
+            
+            return await stepContext.prompt("TextPrompt", promptOptions);
             // { "prompt": reply }
         }
         else {
@@ -146,9 +151,56 @@ export class MainDialog extends ComponentDialog {
      * Second step in the waterfall.
      */
     private async actStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
-        const didntUnderstandMessageText = `Sorry, I didn't get that. Please try asking in a different way.`;
-        await stepContext.context.sendActivity(didntUnderstandMessageText, didntUnderstandMessageText, InputHints.IgnoringInput);
+        const command = stepContext.result;
 
+        if (command.toLowerCase().includes("choose image"))
+        {
+            await stepContext.context.sendActivity("Choosing image", InputHints.IgnoringInput);
+            const imageIndex: number = await this.GetImageIndex(stepContext);
+            const image: DailyChallengeImage = await getDailyChallengeImage();
+//            BingMapService mapService = new BingMapService(Configuration["BingMapsAPI"]);
+            console.log("Image Text: " + image.imageText);
+            const challengeEntry: DailyChallengeEntry = await GetLocationDetails(image.imageText);
+
+            if (challengeEntry == null)
+            {
+                console.log("Unable to retrieve details of image");
+                throw ("Unable to retrieve details from Google");
+            }
+            console.log("Image Response: " + challengeEntry.imageResponse);
+            console.log("Longitude: " + challengeEntry.longitude);
+            console.log("Latitude: " + challengeEntry.latitude);
+            console.log("Latitude: " + challengeEntry.distanceFrom);
+
+            var dailyChallenge = await getDailyChallenge();
+
+            dailyChallenge.photoUrl = image.url;
+            dailyChallenge.text = image.imageText;
+            dailyChallenge.latitude = challengeEntry.latitude;
+            dailyChallenge.longitude = challengeEntry.longitude;
+            dailyChallenge.extractedLocation = challengeEntry.imageResponse;
+            dailyChallenge.entries = [];
+            dailyChallenge.publishedTime = new Date();
+            dailyChallenge.currentStatus = DailyChallengeStatus.Guessing;
+            await saveDailyChallenge(dailyChallenge);
+
+            const heroCard = CardFactory.heroCard(
+                "The image has been chosen - time to get your guesses in",
+                "Reply with @WhereOnEarthBot and your guess. Results will come in when everyone has added a guess or at 16:00. Good luck!",
+                CardFactory.images([image.url]),
+                []
+            );
+            
+            let reply = MessageFactory.attachment(heroCard);
+            
+            await stepContext.context.sendActivity(reply);
+            return stepContext.endDialog();
+
+        }
+        else {
+            const didntUnderstandMessageText = `Sorry, I didn't get that. Please try asking in a different way.`;
+            await stepContext.context.sendActivity(didntUnderstandMessageText, didntUnderstandMessageText, InputHints.IgnoringInput);
+        }
         return await stepContext.next();
     }
 
@@ -231,7 +283,8 @@ export class MainDialog extends ComponentDialog {
 
             heroCard = CardFactory.heroCard(
                 "Today's Daily Challenge",
-                CardFactory.images[image.url],
+                "Click to choose the image for today or try another image.",
+                CardFactory.images([image.url]),
                 CardFactory.actions([
                     {
                         title: "Choose image",
@@ -250,7 +303,7 @@ export class MainDialog extends ComponentDialog {
                     }
                 ])
             );
-            heroCard = CardFactory.heroCard("Test","test");
+            //heroCard = CardFactory.heroCard("Test","test");
         }
         catch (exp) {
             if (exp.Message == "Sorry, couldn't find a suitable image. Try again shortly.") {
@@ -271,86 +324,24 @@ export class MainDialog extends ComponentDialog {
 
         return heroCard;
     }
+
+    private async GetImageIndex(context: WaterfallStepContext):Promise<number>
+        {
+            const dailyChallenge = await getDailyChallenge();
+            const info: DailyChallengeInfo = await getLatestInfo(dailyChallenge);
+            return info.currentImageIndex;
+        }
 }
 
 
 
 /*
 
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.Dialogs;
-using Microsoft.BotBuilderSamples;
-using Microsoft.Bot.Schema;
-using Microsoft.Bot.Schema.Teams;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Recognizers.Text.DataTypes.TimexExpression;
-using WhereOnEarthBot.Models;
-using WhereOnEarthBot.Services;
-using System.Collections.Generic;
-using WhereOnEarthBot.Helpers;
-
-
 namespace Microsoft.BotBuilderSamples.Dialogs
 {
     public class MainDialog : LogoutDialog
     {
-        protected readonly IConfiguration Configuration;
-        protected readonly ILogger Logger;
-        private TableService tableService;
-
-        public MainDialog(IConfiguration configuration, ILogger<MainDialog> logger, IBotTelemetryClient telemetryClient)
-            : base(nameof(MainDialog), configuration["ConnectionName"])
-        {
-            Configuration = configuration;
-            Logger = logger;
-            TelemetryClient = telemetryClient;
-
-            AddDialog(new OAuthPrompt(
-                nameof(OAuthPrompt),
-                new OAuthPromptSettings
-                {
-                    ConnectionName = ConnectionName,
-                    Text = "Please login",
-                    Title = "Login",
-                    Timeout = 300000, // User has 5 minutes to login
-                }));
-
-            AddDialog(new TextPrompt(nameof(TextPrompt))
-            {
-                TelemetryClient = telemetryClient,
-            });
-            AddDialog(new ChallengeGuesserDialog(nameof(ChallengeGuesserDialog), configuration, logger, telemetryClient)
-            {
-                TelemetryClient = telemetryClient,
-            });
-            AddDialog(new WaterfallDialog(nameof(WaterfallDialog), new WaterfallStep[]
-            {
-                IntroStepAsync,
-                ActStepAsync,
-                FinalStepAsync
-            })
-            {
-                TelemetryClient = telemetryClient,
-            });
-
-            // The initial child Dialog to run.
-            InitialDialogId = nameof(WaterfallDialog);
-
-            tableService = new TableService(Configuration["DailyChallengeTableConnectionString"], Configuration["DailyChallengeTableName"]);
-        }
-
-        private async Task<DialogTurnResult> IntroStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            T
-        }
-
+     
         private async Task<DialogTurnResult> ActStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var command = stepContext.Result.ToString();

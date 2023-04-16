@@ -143,7 +143,7 @@ export async function saveDailyChallengeImage(image: DailyChallengeImage) {
     container.items.upsert(image);
 }
 
-export async function getDailyChallengeImage() {
+export async function getDailyChallengeImage(): Promise<DailyChallengeImage> {
     const container = getContainer();
 
     const id: string = new Date().toDateString();
@@ -163,9 +163,11 @@ export async function getDailyChallengeImage() {
             objType: "DailyChallengeImage"
         }
         container.items.upsert(dailyChallengeImage);
+    } else {
+        dailyChallengeImage = dailyChallengeImages.resources[0];
     }
 
-    return info;
+    return dailyChallengeImage;
 }
 
 export async function saveDailyChallengeTeamInfo(team: DailyChallengeTeam) {

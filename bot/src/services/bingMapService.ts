@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
-// import { handleError, finish, logStep } from "./Shared/handleError";
+/// <reference path="types/MicrosoftMaps/Microsoft.Maps.All.d.ts" />
 import { DailyChallenge, DailyChallengeStatus } from "../models/dailyChallenge";
 import { DailyChallengeEntriesStatus } from "../models/dailyChallengeEntriesStatus";
 import { DailyChallengeInfo, ImageSource } from "../models/dailyChallengeInfo";
@@ -9,10 +9,12 @@ import { DailyChallengeTeam } from "../models/dailyChallengeTeam";
 import { info } from "console";
 import { BasicAuthProvider, createApiClient, TeamsFx } from "@microsoft/teamsfx";
 import { getDailyChallengeImage } from "./cosmosService";
+import { DailyChallengeEntry } from '../models/dailyChallengeEntry';
+import 'bingmaps';
 
 const bingMapsKey = process.env.BING_MAPS_KEY || "<Bing Maps Key>";
 
-export async function GetLocationDetails(locationQueryText:string)
+export async function GetLocationDetails(locationQueryText:string): Promise<DailyChallengeEntry>
         {
             var map = new Microsoft.Maps.Map('#MyMap', {
                 credentials: 'Your Bing Maps Key'    
@@ -29,6 +31,8 @@ export async function GetLocationDetails(locationQueryText:string)
                     }
                 });
             });
+
+        return null;
 /*
 
             using BingMapsRESTToolkit;
