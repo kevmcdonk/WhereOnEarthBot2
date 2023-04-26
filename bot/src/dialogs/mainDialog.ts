@@ -27,6 +27,7 @@ import { DailyChallengeEntry } from '../models/dailyChallengeEntry';
 import { DailyChallengeInfo, ImageSource } from '../models/dailyChallengeInfo';
 import { DailyChallengeImage } from '../models/dailyChallengeImage';
 import { GetLocationDetails } from '../services/bingMapService';
+import fetch from 'node-fetch';
 
 const MAIN_WATERFALL_DIALOG = 'mainWaterfallDialog';
 
@@ -160,8 +161,14 @@ export class MainDialog extends ComponentDialog {
             const image: DailyChallengeImage = await getDailyChallengeImage();
 //            BingMapService mapService = new BingMapService(Configuration["BingMapsAPI"]);
             console.log("Image Text: " + image.imageText);
-            const challengeEntry: DailyChallengeEntry = await GetLocationDetails(image.imageText);
-
+            let challengeEntry: DailyChallengeEntry;
+            try {
+                challengeEntry = await GetLocationDetails(image.imageText);
+            }
+            catch (e) {
+                console.log("Error: " + e);
+            }
+            console.log("Image Response: " + challengeEntry.imageResponse);
             if (challengeEntry == null)
             {
                 console.log("Unable to retrieve details of image");

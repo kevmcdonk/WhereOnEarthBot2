@@ -10,94 +10,53 @@ import { info } from "console";
 import { BasicAuthProvider, createApiClient, TeamsFx } from "@microsoft/teamsfx";
 import { getDailyChallengeImage } from "./cosmosService";
 import { DailyChallengeEntry } from '../models/dailyChallengeEntry';
+import fetch from 'node-fetch';
 import 'bingmaps';
 
 const bingMapsKey = process.env.BING_MAPS_KEY || "<Bing Maps Key>";
+const openAIBase = process.env["AZURE_OPENAI_SERVICE"];
+const openAIAPIKey = process.env["AZURE_OPENAI_KEY"];
+const openAIDeployment = process.env["AZURE_OPENAI_CHATGPT_DEPLOYMENT"];
+
 
 export async function GetLocationDetails(locationQueryText:string): Promise<DailyChallengeEntry>
-        {
-            var map = new Microsoft.Maps.Map('#MyMap', {
-                credentials: 'Your Bing Maps Key'    
-            });
-            
-            Microsoft.Maps.loadModule('Microsoft.Maps.Search', () => {
-                var searchManager = new Microsoft.Maps.Search.SearchManager(map);
-                searchManager.geocode({
-                    bounds: map.getBounds(),
-                    where: 'somewhere',
-                    callback: (answer, userData) => {
-                        map.setView({ bounds: answer.results[0].bestView });
-                        map.entities.push(new Microsoft.Maps.Pushpin(answer.results[0].location));
-                    }
-                });
-            });
-
-        return null;
-/*
-
-            using BingMapsRESTToolkit;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
-using WhereOnEarthBot.Models;
-
-namespace WhereOnEarthBot.Services
 {
-    public class BingMapService
-    {
-        public string BingMapsKey;
+  let prompt = 'Show me the longitude, latitude and location name (as imageResponse) for "Meldon Hill, Dartmoor National Park, Devon"\nReturn the results in a JSON schema that looks like {id: string;objType: string;userId: string;userName: string;imageResponse: string;longitude: number;latitude: number;distanceFrom: number;challengeDate: Date;fromId: string;fromName: string;serviceUrl: string;channelId: string;conversationId: string;}';
+  let openAIUrl = `https://${openAIBase}.openai.azure.com/openai/deployments/${openAIDeployment}/completions?api-version=2022-12-01`;
+  const res = await fetch(openAIUrl, {
+    method: "post",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "api-key": openAIAPIKey
+    },
 
-        public BingMapService(string bingMapsKey)
-        {
-            BingMapsKey = bingMapsKey;
-        }
+    //make sure to serialize your JSON body
+    body: JSON.stringify({
+      //engine: "deployment",
+      prompt: prompt,
+      max_tokens: 32,
+      n: 1,
+      stop: ["\n"]
+    })
+  });
 
-        public async Task<DailyChallengeEntry> GetLocationDetails(string locationQueryText, ILogger logger)
-        {
-            try
-            {
-                //Create a request.
-                var request = new GeocodeRequest()
-                {
-                    Query = locationQueryText,
-                    IncludeIso2 = true,
-                    IncludeNeighborhood = true,
-                    MaxResults = 25,
-                    BingMapsKey = BingMapsKey
-                };
+  const completion = await res.json();
 
-                //Process the request by using the ServiceManager.
-                var response = await request.Execute();
-
-                if (response != null &&
-                    response.ResourceSets != null &&
-                    response.ResourceSets.Length > 0 &&
-                    response.ResourceSets[0].Resources != null &&
-                    response.ResourceSets[0].Resources.Length > 0)
-                {
-                    var locationResult = response.ResourceSets[0].Resources[0] as BingMapsRESTToolkit.Location;
-                    DailyChallengeEntry entry = new DailyChallengeEntry()
-                    {
-                        imageResponse = locationResult.Name,
-                        longitude = float.Parse(locationResult.Point.Coordinates[0].ToString()),
-                        latitude = float.Parse(locationResult.Point.Coordinates[1].ToString())
-                    };
-
-                    return entry;
-                }
-                throw new Exception("Location not found");
-            }
-            catch (Exception exp)
-            {
-                logger.LogError("Error retrieving image: " + exp.Message + ":::" + exp.StackTrace);
-                Console.WriteLine("Grrr error: " + exp.Message);
-                return null;
-            }
-        }
-    }
+  return {
+    id: '',
+    objType: 'DailyChallengeEntry',
+    userId: '',
+    userName: '',
+    imageResponse: '',
+    longitude: 0,
+    latitude: 0,
+    distanceFrom: 0,
+    challengeDate: new Date(2023,1,1),
+    fromId: '',
+    fromName: completion.toString(),
+    serviceUrl: '',
+    channelId: '',
+    conversationId: '',
+  }
 }
-*/
-        }
