@@ -22,7 +22,7 @@ const openAIDeployment = process.env["AZURE_OPENAI_CHATGPT_DEPLOYMENT"];
 export async function GetLocationDetails(locationQueryText:string): Promise<DailyChallengeEntry>
 {
   let prompt = 'Show me the longitude, latitude and location name (as imageResponse) for "Meldon Hill, Dartmoor National Park, Devon"\nReturn the results in a JSON schema that looks like {id: string;objType: string;userId: string;userName: string;imageResponse: string;longitude: number;latitude: number;distanceFrom: number;challengeDate: Date;fromId: string;fromName: string;serviceUrl: string;channelId: string;conversationId: string;}';
-  let openAIUrl = `https://${openAIBase}.openai.azure.com/openai/deployments/${openAIDeployment}/completions?api-version=2022-12-01`;
+  let openAIUrl = `https://${openAIBase}.openai.azure.com/openai/deployments/${openAIDeployment}/chat/completions?api-version=2023-03-15-preview`;
   const res = await fetch(openAIUrl, {
     method: "post",
     headers: {
@@ -33,16 +33,19 @@ export async function GetLocationDetails(locationQueryText:string): Promise<Dail
 
     //make sure to serialize your JSON body
     body: JSON.stringify({
-      //engine: "deployment",
-      prompt: prompt,
-      max_tokens: 32,
       n: 1,
-      stop: ["\n"]
+      stop: ["\n"],
+      messages:[
+        {"role": "system", "content": "Return a JSON message based on the question asked by the user and using the schema {id: string;objType: string;userId: string;userName: string;imageResponse: string;longitude: number;latitude: number;distanceFrom: number;challengeDate: Date;fromId: string;fromName: string;serviceUrl: string;channelId: string;conversationId: string;}."},
+        {"role": "user", "content": "Show me the longitude, latitude and location name (as imageResponse) for 'Meldon Hill, Dartmoor National Park, Devon'"},
+        {"role": "assistant", "content": "{'id': '','objType': 'DailyChallengeEntry','userId': '','userName': '','imageResponse': 'Meldon Hill, Devon','longitude': 50.732503,'latitude': -4.018769,'distanceFrom': 0,'challengeDate': '2023-01-01','fromId': '','fromName': '','serviceUrl': '','channelId': '','conversationId': ''}"},
+        {"role": "user", "content": locationQueryText}
+      ]
     })
   });
 
-  const completion = await res.json();
-
+const completion: any = await res.json();
+const responseJson = completion.choices[0].message.content;
   return {
     id: '',
     objType: 'DailyChallengeEntry',
