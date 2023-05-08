@@ -12,6 +12,8 @@
     "license": "MIT",
     "dependencies": {
         "@types/bingmaps": "^0.0.1",
+        "botbuilder-dialogs-adaptive": "^4.19.3-preview",
+        "botframework-connector": "^4.19.3",
         "node-fetch": "^3.3.1"
     }
 }

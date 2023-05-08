@@ -72,7 +72,7 @@ export class MainDialog extends ComponentDialog {
      * Note that the sample LUIS model will only recognize Paris, Berlin, New York and London as airport cities.
      */
     private async introStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
-        console.log("introStep");
+        console.log("MainDialog introStep");
         //TODO: Check Cosmos connection correct
         const dailyChallenge: DailyChallenge = await getDailyChallenge();
         const teamInfo: DailyChallengeTeam = await getDailyChallengeTeamInfo();
@@ -152,6 +152,7 @@ export class MainDialog extends ComponentDialog {
      * Second step in the waterfall.
      */
     private async actStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
+        console.log("MainDialog actStep");
         const command = stepContext.result;
 
         if (command.toLowerCase().includes("choose image"))
@@ -216,6 +217,7 @@ export class MainDialog extends ComponentDialog {
      * It wraps up the sample "book a flight" interaction with a simple confirmation.
      */
     private async finalStep(stepContext: WaterfallStepContext): Promise<DialogTurnResult> {
+        console.log("MainDialog finalStep");
         // If the child dialog ("bookingDialog") was cancelled or the user failed to confirm, the Result here will be null.
         if (stepContext.result) {
             const result = stepContext.result;
