@@ -100,7 +100,7 @@ export class ChallengeGuesserDialog extends ComponentDialog {
     // TODO: add all entries to see if everyone in the Team has guessed
     let messageText = null;
     if (stepContext != null && stepContext.result != null) {
-      messageText = stepContext.result.ToString();
+      messageText = stepContext.result.toString();
     } else if (
       stepContext != null &&
       stepContext.context != null &&
@@ -114,9 +114,9 @@ export class ChallengeGuesserDialog extends ComponentDialog {
     }
 
     if (messageText != null) {
-      if (messageText.toLowerCase().indexOf("check results") > 0) {
+      if (messageText.toLowerCase().indexOf("check results") >= 0) {
         //await CheckResults(stepContext, cancellationToken, dailyChallenge, info);
-        return await stepContext.endDialog();
+        return await stepContext.next();
       }
 
       var userEntries = dailyChallenge.entries.flatMap(
@@ -163,14 +163,28 @@ export class ChallengeGuesserDialog extends ComponentDialog {
 
     //BingMapService mapService = new BingMapService(Configuration["BingMapsAPI"]);
 
-            const guessText = stepContext.result.toString();
+            let guessText = null;
+            if (stepContext != null && stepContext.result != null) {
+              guessText = stepContext.result.toString();
+            } else if (
+              stepContext != null &&
+              stepContext.context != null &&
+              stepContext.context.activity != null &&
+              stepContext.context.activity.text != null
+            ) {
+              guessText = stepContext.context.activity.text;
+            } else if (stepContext != null && stepContext.options != null) {
+              let options: PromptOptions = stepContext.options;
+              guessText = options.prompt.toString(); //.text;
+            }
+            
             let dailyChallenge = await getDailyChallenge();
             let info = await getLatestInfo(dailyChallenge);
 
-            if (guessText.toLowerCase().indexOf("check results") > 0)
+            if (guessText.toLowerCase().indexOf("check results") >= 0)
             {   
                 await this.CheckResults(stepContext, dailyChallenge, info);
-                return await stepContext.endDialog();
+                return await stepContext.next();
             }
             else
             {
@@ -190,7 +204,7 @@ export class ChallengeGuesserDialog extends ComponentDialog {
 
                     if (entry == null)
                     {
-                        await stepContext.context.sendActivity(`Sorry, bing maps couldn't identify the location '${stepContext.result.toString()}'. Please try again.`);
+                        await stepContext.context.sendActivity(`Sorry, bing maps couldn't identify the location '${guessText}'. Please try again.`);
                         return await stepContext.endDialog();
                     }
                     else
@@ -200,7 +214,7 @@ export class ChallengeGuesserDialog extends ComponentDialog {
                             const matchingEntries = dailyChallenge.entries.find(e => e.imageResponse == entry.imageResponse);
                             if (matchingEntries != null)
                             {
-                                await stepContext.context.sendActivity(`Sorry, someone has beaten you to suggesting '${stepContext.result.toString()}'. Please try again.`);
+                                await stepContext.context.sendActivity(`Sorry, someone has beaten you to suggesting '${guessText}'. Please try again.`);
                                 // This line caused a bit of a meltdown so changing to end dialogue
                                 //return await stepContext.BeginDialogAsync(nameof(ChallengeGuesserDialog), null, cancellationToken);
                                 return await stepContext.endDialog();
@@ -219,7 +233,6 @@ export class ChallengeGuesserDialog extends ComponentDialog {
                         
                         const currentStatus: DailyChallengeEntriesStatus = await this.CheckWhetherAllEntriesReceived(stepContext, dailyChallenge, info);
                         let reply = MessageFactory.attachment(getAwaitingGuesses(currentStatus.userCount, dailyChallenge.photoUrl, currentStatus.usersWithEntryCount, entry.userName, entry.imageResponse));
-
                         await stepContext.context.sendActivity(reply);
                         return await stepContext.endDialog();
                     }
@@ -295,6 +308,8 @@ export class ChallengeGuesserDialog extends ComponentDialog {
                 var microsoftAppPassword = process.env["MicrosoftAppPassword"];
                 const creds = new MicrosoftAppCredentials(microsoftAppId, microsoftAppPassword);
                 const connector = new ConnectorClient(creds);
+
+                //TODO: work out how this will work as says API no ;onger exists
                 const response: ConversationsGetConversationMembersResponse = await connector.conversations.getConversationMembers(stepContext.context.activity.conversation.id);
                 
                 response.forEach(user => {
@@ -361,7 +376,7 @@ export class ChallengeGuesserDialog extends ComponentDialog {
 
       const heroCard = CardFactory.heroCard(
         `We have a winner! Congratulations ${currentWinningUser}`,
-        `The winning guess was ${currentWinningEntry} which was ${currentWinningDistance} km from the real answer of NEEDTOSETTHIS (PLACETEXT)`,
+        `The winning guess was ${currentWinningEntry} which was ${currentWinningDistance} km from the real answer of ${image.imageText}`,
         [],
         [] // Images = new List<CardImage> { new CardImage(imageUrl) }
       );

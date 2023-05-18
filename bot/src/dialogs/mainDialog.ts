@@ -142,7 +142,10 @@ export class MainDialog extends ComponentDialog {
             }
             else {
                 let winningReply = getResultCardAttachment(dailyChallenge.winnerName, dailyChallenge.photoUrl, dailyChallenge.winnerGuess, dailyChallenge.distanceToEntry.toString(), dailyChallenge.extractedLocation, dailyChallenge.text);
-                await stepContext.context.sendActivity(winningReply);
+
+                let reply = MessageFactory.attachment(winningReply);
+            
+                await stepContext.context.sendActivity(reply);
                 return await stepContext.endDialog();
             }
         }

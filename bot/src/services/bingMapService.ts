@@ -53,10 +53,12 @@ export async function GetLocationDetails(locationQueryText:string): Promise<Dail
   });
 
 const completion: any = await res.json();
-const responseJsonText: string = completion.choices[0].message.content;
+let responseJsonText: string = completion.choices[0].message.content.toString();
 try {
   //let responseJSON = JSON.parse(responseJsonText);
-  let responseJSON = JSON.parse(responseJsonText, defaultReviver);
+  //responseJsonText = '{"id": "","objType": "DailyChallengeEntry","userId": "","userName": "","imageResponse": "Canoe paddling in Okefenokee National Wildlife Refuge, Georgia","longitude": 30.765076,"latitude": -82.115057,"distanceFrom": 0,"challengeDate": "2023-01-01","fromId": "","fromName": "","serviceUrl": "","channelId": "","conversationId": ""}';
+  var responseJSON = JSON.parse(responseJsonText) as DailyChallengeEntry;
+
   return responseJSON;
 } catch(e) {
   return null;

@@ -5,8 +5,8 @@
     "provisionParameters": {
       "value": {
         "resourceBaseName": "whereoneardev3241c7",
-        "botAadAppClientId": "{{state.fx-resource-bot.botId}}",
-        "botAadAppClientSecret": "{{state.fx-resource-bot.botPassword}}"
+        "botAadAppClientId": "${{BOT_ID}}",
+        "botAadAppClientSecret": "${{SECRET_BOT_PASSWORD}}"
       }
     }
   }
