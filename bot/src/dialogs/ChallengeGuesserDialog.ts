@@ -40,9 +40,9 @@ import {
   saveDailyChallenge,
 } from "../services/cosmosService";
 import { GetLocationDetails } from '../services/bingMapService';
-import { GetDistanceFromResult } from '../helpers/DistanceMeasureHelper';
+import { GetDistanceFromResult } from '../helpers/distanceMeasureHelper';
 import { getAwaitingGuesses } from '../helpers/attachmentsHelper';
-import { ConversationsGetConversationMembersResponse } from "botframework-connector/lib/connectorApi/models";
+import { ConnectorClientOptions, ConversationsGetConversationMembersResponse } from "botframework-connector/lib/connectorApi/models";
 const moment = require("moment");
 
 const MAIN_WATERFALL_DIALOG = "mainWaterfallDialog";
@@ -98,6 +98,16 @@ export class ChallengeGuesserDialog extends ComponentDialog {
     var dailyChallenge = await getDailyChallenge();
     var info = await getLatestInfo(dailyChallenge);
     // TODO: add all entries to see if everyone in the Team has guessed
+
+    const currentStatus: DailyChallengeEntriesStatus = await this.CheckWhetherAllEntriesReceived(stepContext, dailyChallenge, info);
+                        
+    if (currentStatus.allResultsReceived)
+    {
+        await this.CheckResults(stepContext, dailyChallenge, info);
+        return await stepContext.endDialog();
+    }
+    else
+    {
     let messageText = null;
     if (stepContext != null && stepContext.result != null) {
       messageText = stepContext.result.toString();
@@ -150,6 +160,7 @@ export class ChallengeGuesserDialog extends ComponentDialog {
 
     await stepContext.context.sendActivity(reply);
     return stepContext.endDialog();
+                          }
   }
 
   /**
@@ -233,7 +244,11 @@ export class ChallengeGuesserDialog extends ComponentDialog {
                         
                         const currentStatus: DailyChallengeEntriesStatus = await this.CheckWhetherAllEntriesReceived(stepContext, dailyChallenge, info);
                         let reply = MessageFactory.attachment(getAwaitingGuesses(currentStatus.userCount, dailyChallenge.photoUrl, currentStatus.usersWithEntryCount, entry.userName, entry.imageResponse));
+                        
                         await stepContext.context.sendActivity(reply);
+                        if (currentStatus.userCount >= currentStatus.usersWithEntryCount) {
+                          
+                        }
                         return await stepContext.endDialog();
                     }
                 }
@@ -307,7 +322,11 @@ export class ChallengeGuesserDialog extends ComponentDialog {
                 var microsoftAppId = process.env["MicrosoftAppId"];
                 var microsoftAppPassword = process.env["MicrosoftAppPassword"];
                 const creds = new MicrosoftAppCredentials(microsoftAppId, microsoftAppPassword);
-                const connector = new ConnectorClient(creds);
+                const ccOptions: ConnectorClientOptions = {
+                  baseUri: stepContext.context.activity.serviceUrl
+                };
+                
+                const connector = new ConnectorClient(creds, ccOptions);
 
                 //TODO: work out how this will work as says API no ;onger exists
                 const response: ConversationsGetConversationMembersResponse = await connector.conversations.getConversationMembers(stepContext.context.activity.conversation.id);
